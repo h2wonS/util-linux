@@ -468,7 +468,6 @@ static void write_header_to_device(struct mkswap_control *ctl)
 	assert(ctl);
 	assert(ctl->fd > -1);
 	assert(ctl->signature_page);
-
 	if (lseek(ctl->fd, SIGNATURE_OFFSET, SEEK_SET) != SIGNATURE_OFFSET)
 		errx(EXIT_FAILURE, _("unable to rewind swap-device"));
 

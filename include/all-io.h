@@ -18,24 +18,48 @@
 #endif
 
 #include "c.h"
+#define KB 1024
 
 static inline int write_all(int fd, const void *buf, size_t count)
 {
-	while (count) {
-		ssize_t tmp;
+    uint64_t wp = 0;
+    uint32_t unit = 192 * KB;
+    uint32_t left = count;
 
-		errno = 0;
-		tmp = write(fd, buf, count);
-		if (tmp > 0) {
-			count -= tmp;
-			if (count)
-				buf = (const void *) ((const char *) buf + tmp);
-		} else if (errno != EINTR && errno != EAGAIN)
-			return -1;
-		if (errno == EAGAIN)	/* Try later, *sigh* */
-			xusleep(250000);
-	}
-	return 0;
+    while (left) {
+        ssize_t tmp = 0;
+        errno = 0;
+
+        if(left < unit){
+            void* pad;
+            int ret = 0;
+            ret = posix_memalign(&pad, sysconf(_SC_PAGESIZE), 192 * KB);
+            if(ret){
+                return ret;
+            }
+            memcpy(pad, buf, count);
+            tmp = pwrite(fd, pad, unit, wp);
+            free(pad);
+        }
+        else{
+            tmp = pwrite(fd, buf, unit, wp);
+        }
+        if (tmp > 0) {
+            if (left < tmp){
+                left = 0;
+            }
+            else{
+                left -= tmp;
+            }
+            buf = (const void *) ((const char *) buf + tmp);
+            wp += tmp;
+        } else if (errno != EINTR && errno != EAGAIN)
+            return -1;
+        if (errno == EAGAIN)	/* Try later, *sigh* */
+            xusleep(250000);
+
+    }
+    return 0;
 }
 
 static inline int fwrite_all(const void *ptr, size_t size,
