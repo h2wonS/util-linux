@@ -31,13 +31,16 @@ static inline int write_all(int fd, const void *buf, size_t count)
         errno = 0;
 
         if(left < unit){
-            void* pad;
             int ret = 0;
+            void * pad;
+
             ret = posix_memalign(&pad, sysconf(_SC_PAGESIZE), 192 * KB);
-            if(ret){
-                return ret;
-            }
-            memcpy(pad, buf, count);
+            if(ret) return ret;
+
+            char rbuf[1024] = {'\0'};
+            memcpy(pad, rbuf, 1024);
+            memcpy((char*)pad+1024, buf, left);
+
             tmp = pwrite(fd, pad, unit, wp);
             free(pad);
         }

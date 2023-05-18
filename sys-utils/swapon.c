@@ -409,7 +409,6 @@ static int swap_detect_signature(const char *buf, int *sig)
 	assert(sig);
 
 	if (memcmp(buf, SWAP_SIGNATURE, SWAP_SIGNATURE_SZ) == 0){    
-        printf("[%s::%s::%d]\n", __FILE__, __func__, __LINE__);
 		*sig = SIG_SWAPSPACE;
         }
 
@@ -440,11 +439,11 @@ static char *swap_get_header(int fd, int *sig, unsigned int *pagesize)
 	buf = xmalloc(MAX_PAGESIZE);
 
 	datasz = read(fd, buf, MAX_PAGESIZE);
-	if (datasz == (ssize_t) -1)
+	if (datasz == (ssize_t) -1){
 		goto err;
+        }
 
 	for (page = 0x1000; page <= MAX_PAGESIZE; page <<= 1) {
-        printf("[%s::%s::%d] page=0x%x SIGSIZE=%ld\n", __FILE__, __func__, __LINE__, page, SWAP_SIGNATURE_SZ);
 		/* skip 32k pagesize since this does not seem to
 		 * be supported */
 		if (page == 0x8000)
@@ -461,7 +460,6 @@ static char *swap_get_header(int fd, int *sig, unsigned int *pagesize)
 	}
 
 	if (*pagesize){
-        printf("[%s::%s::%d] *pagesize=%d \n", __FILE__, __func__, __LINE__, *pagesize);
 		return buf;
         }
 err:
@@ -683,7 +681,6 @@ static int do_swapon(const struct swapon_ctl *ctl,
 		printf(_("swapon %s\n"), dev.path);
 
 	status = swapon(dev.path, flags);
-        printf("[%s::%s::%d] fUCK dev.path=%s flags=%d\n", __FILE__, __func__, __LINE__, dev.path, flags);
 	if (status < 0)
 		warn(_("%s: swapon failed"), dev.path);
 
